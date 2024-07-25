@@ -162,7 +162,7 @@ const depositMethods = computed(() => {
   if (eraNetwork.value.l1Network && !noBalances.value) {
     methods.push({
       props: {
-        iconUrl: destinations.value.ethereum.iconUrl,
+        iconUrl: destinations.value.stratis.iconUrl,
         label: `Bridge from ${eraNetwork.value.l1Network?.name}`,
         description: `Receive tokens from your ${eraNetwork.value.l1Network?.name} account`,
         as: "RouterLink",

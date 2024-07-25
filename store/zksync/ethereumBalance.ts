@@ -75,7 +75,7 @@ export const useZkSyncEthereumBalanceStore = defineStore("zkSyncEthereumBalances
       if (!l1Network.value) throw new Error(`L1 network is not available on ${selectedNetwork.value.name}`);
 
       if (
-        ([l1Networks.mainnet.id, l1Networks.sepolia.id] as number[]).includes(l1Network.value?.id) &&
+        ([l1Networks.stratis.id, l1Networks.auroria.id] as number[]).includes(l1Network.value?.id) &&
         portalRuntimeConfig.ankrToken
       ) {
         return await getBalancesFromApi();

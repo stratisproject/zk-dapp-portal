@@ -19,8 +19,8 @@
         <DestinationItem
           v-if="eraNetwork.l1Network"
           label="Official bridge"
-          :description="`Receive from your ${destinations.ethereum.label} account`"
-          :icon-url="destinations.ethereum.iconUrl"
+          :description="`Receive from your ${destinations.stratis.label} account`"
+          :icon-url="destinations.stratis.iconUrl"
           as="RouterLink"
           :to="{ name: 'bridge', query: $route.query }"
         />
@@ -74,12 +74,12 @@
 
 <script lang="ts" setup>
 import { ArrowsUpDownIcon, ArrowTopRightOnSquareIcon, BanknotesIcon, QrCodeIcon } from "@heroicons/vue/24/outline";
-import { mainnet } from "viem/chains";
+import { stratis } from "viem/chains";
 
 const { destinations } = storeToRefs(useDestinationsStore());
 const { eraNetwork } = storeToRefs(useZkSyncProviderStore());
-const isMainnet = computed(() => eraNetwork.value.l1Network?.id === mainnet.id);
-const isTestnet = computed(() => eraNetwork.value.l1Network && eraNetwork.value.l1Network.id !== mainnet.id);
+const isMainnet = computed(() => eraNetwork.value.l1Network?.id === stratis.id);
+const isTestnet = computed(() => eraNetwork.value.l1Network && eraNetwork.value.l1Network.id !== stratis.id);
 </script>
 
 <style lang="scss" scoped></style>

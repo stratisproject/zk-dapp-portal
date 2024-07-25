@@ -5,7 +5,7 @@
     variant="primary"
   >
     <DestinationItem
-      :icon-url="destinations.ethereum.iconUrl"
+      :icon-url="destinations.stratis.iconUrl"
       as="RouterLink"
       :to="{ name: 'bridge' }"
       variant="primary"

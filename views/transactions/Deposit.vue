@@ -17,7 +17,7 @@
     <NetworkSelectModal
       v-model:opened="fromNetworkModalOpened"
       title="From"
-      :network-key="destinations.ethereum.key"
+      :network-key="destinations.stratis.key"
       @update:network-key="fromNetworkSelected($event)"
     />
     <NetworkSelectModal
@@ -61,9 +61,9 @@
               @click="fromNetworkModalOpened = true"
             >
               <template #left-icon>
-                <img :src="destinations.ethereum.iconUrl" class="h-full w-full" />
+                <img :src="destinations.stratis.iconUrl" class="h-full w-full" />
               </template>
-              <span>{{ destinations.ethereum.label }}</span>
+              <span>{{ destinations.stratis.label }}</span>
             </CommonButtonDropdown>
           </template>
         </CommonInputTransactionAmount>
@@ -184,7 +184,7 @@
           >
             <p>
               Insufficient <span class="font-medium">{{ feeToken?.symbol }}</span> balance on
-              {{ destinations.ethereum.label }} to cover the fee. We recommend having at least
+              {{ destinations.stratis.label }} to cover the fee. We recommend having at least
               <span class="font-medium"
                 >{{
                   feeToken?.price
@@ -205,7 +205,7 @@
           >
             <p>
               Insufficient <span class="font-medium">{{ feeToken?.symbol }}</span> balance on
-              <span class="font-medium">{{ destinations.ethereum.label }}</span> to cover the fee
+              <span class="font-medium">{{ destinations.stratis.label }}</span> to cover the fee
             </p>
             <NuxtLink :to="{ name: 'receive-methods' }" class="alert-link">Receive funds</NuxtLink>
           </CommonAlert>
@@ -403,7 +403,7 @@ const { balance, balanceInProgress, balanceError } = storeToRefs(zkSyncEthereumB
 
 const toNetworkModalOpened = ref(false);
 const toNetworkSelected = (networkKey?: string) => {
-  if (destinations.value.ethereum.key === networkKey) {
+  if (destinations.value.stratis.key === networkKey) {
     router.replace({ name: "bridge-withdraw", query: route.query });
   }
 };

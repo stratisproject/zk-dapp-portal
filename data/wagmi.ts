@@ -1,5 +1,5 @@
 import { fallback, http } from "@wagmi/core";
-import { zkSync, type Chain, zkSyncSepoliaTestnet, zkSyncTestnet } from "@wagmi/core/chains";
+import { type Chain } from "@wagmi/core/chains";
 import { defaultWagmiConfig } from "@web3modal/wagmi";
 
 import { chainList, type ZkSyncNetwork } from "@/data/networks";
@@ -9,16 +9,39 @@ const portalRuntimeConfig = usePortalRuntimeConfig();
 const metadata = {
   name: "zkSync Portal",
   description: "zkSync Portal - view balances, transfer and bridge tokens",
-  url: "https://portal.zksync.io",
-  icons: ["https://portal.zksync.io/icon.png"],
+  url: "https://portal.zksync.stratisplatform.com",
+  icons: ["https://portal.zksync.stratisplatform.com/icon.png"],
 };
 
 if (!portalRuntimeConfig.walletConnectProjectId) {
   throw new Error("WALLET_CONNECT_PROJECT_ID is not set. Please set it in .env file");
 }
 
+const zkSyncAuroria = {
+  id: 206206,
+  name: "zkSync Auroria",
+  network: "zksync-auroria",
+  nativeCurrency: {
+    decimals: 18,
+    name: "Auroria Stratis",
+    symbol: "tSTRAX",
+  },
+  rpcUrls: {
+    default: {
+      http: ["https://auroria.zksync.rpc.stratisplatform.com"],
+      webSocket: ["wss://auroria.zksync.rpc.stratisplatform.com/ws"],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: "zkExplorer",
+      url: "https://auroria.explorer.zksync.stratisplatform.com",
+    },
+  },
+};
+
 const useExistingEraChain = (network: ZkSyncNetwork) => {
-  const existingNetworks = [zkSync, zkSyncSepoliaTestnet, zkSyncTestnet];
+  const existingNetworks = [zkSyncAuroria];
   return existingNetworks.find((existingNetwork) => existingNetwork.id === network.id);
 };
 const formatZkSyncChain = (network: ZkSyncNetwork) => {
@@ -26,7 +49,7 @@ const formatZkSyncChain = (network: ZkSyncNetwork) => {
     id: network.id,
     name: network.name,
     network: network.key,
-    nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+    nativeCurrency: { name: "Stratis", symbol: "STRAX", decimals: 18 },
     rpcUrls: {
       default: { http: [network.rpcUrl] },
       public: { http: [network.rpcUrl] },
