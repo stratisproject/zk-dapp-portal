@@ -1,18 +1,18 @@
 export const portal = {
-  title: "zkSync Portal | View balances, transfer and bridge tokens",
+  title: "Stratis zkSync Portal | View balances, transfer and bridge tokens",
   description:
-    "zkSync Portal allows you to view your balances, transfer tokens and bridge assets between zkSync and Ethereum",
+    "Stratis zkSync Portal allows you to view your balances, transfer tokens and bridge assets between zkSync and Stratis",
   previewImg: {
     src: "https://portal.zksync.stratisplatform.com/preview.png",
-    alt: "zkSync Portal",
+    alt: "Stratis zkSync Portal",
   },
 };
 export const bridge = {
-  title: "zkSync Bridge | Transfer funds between zkSync and Ethereum",
+  title: "Stratis zkSync Bridge | Transfer funds between zkSync and Stratis",
   description:
-    "With the zkSync Bridge you can easily deposit tokens to zkSync. Enjoy faster, cheaper and more efficient transactions with the future proof zkEVM scaling Ethereum's security and values.",
+    "With the Stratis zkSync Bridge you can easily deposit tokens to zkSync. Enjoy faster, cheaper and more efficient transactions with the future proof zkEVM.",
   previewImg: {
     src: "https://portal.zksync.stratisplatform.com/preview.png",
-    alt: "zkSync Bridge",
+    alt: "Stratis zkSync Bridge",
   },
 };
