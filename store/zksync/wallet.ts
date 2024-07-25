@@ -1,6 +1,6 @@
 import { BigNumber, ethers } from "ethers";
 import { $fetch } from "ofetch";
-import { L1Signer, L1VoidSigner, Web3Provider } from "zksync-ethers";
+import { L1Signer, L1VoidSigner, Web3Provider, Signer } from "zksync-ethers";
 
 import type { Api, TokenAmount } from "@/types";
 import type { BigNumberish } from "ethers";
@@ -23,7 +23,7 @@ export const useZkSyncWalletStore = defineStore("zkSyncWallet", () => {
     }
 
     const web3Provider = new Web3Provider((await onboardStore.getWallet(eraNetwork.value.id)) as any, "any");
-    const eraL2Signer = web3Provider.getSigner();
+    const eraL2Signer = Signer.from(web3Provider.getSigner(), providerStore.requestProvider());
     return eraL2Signer;
   });
   const { execute: getL1Signer, reset: resetL1Signer } = usePromise(async () => {
