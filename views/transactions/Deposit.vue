@@ -36,11 +36,6 @@
     <form v-else @submit.prevent="">
       <template v-if="step === 'form'">
         <TransactionWithdrawalsAvailableForClaimAlert />
-        <EcosystemBlock
-          v-if="eraNetwork.displaySettings?.showPartnerLinks && ecosystemBannerVisible"
-          show-close-button
-          class="mb-block-padding-1/2 sm:mb-block-gap"
-        />
         <CommonInputTransactionAmount
           v-model="amount"
           v-model:error="amountError"
@@ -581,7 +576,7 @@ const transaction = computed<
     },
     from: {
       address: account.value.address!,
-      destination: destinations.value.ethereum,
+      destination: destinations.value.stratis,
     },
     to: {
       address: toAddress,
@@ -667,7 +662,7 @@ const {
   error: transactionError,
   commitTransaction,
 } = useTransaction(eraWalletStore.getL1Signer);
-const { recentlyBridged, ecosystemBannerVisible } = useEcosystemBanner();
+const { recentlyBridged } = useEcosystemBanner();
 const { saveTransaction, waitForCompletion } = useZkSyncTransactionStatusStore();
 
 watch(step, (newStep) => {
