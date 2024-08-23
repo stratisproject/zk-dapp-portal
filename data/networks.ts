@@ -60,6 +60,18 @@ export const dockerizedNode: ZkSyncNetwork = {
 
 const publicChains: ZkSyncNetwork[] = [
   {
+    id: 106106,
+    key: "stratis",
+    name: "zkSync Stratis",
+    rpcUrl: "https://zksync.rpc.stratisplatform.com",
+    blockExplorerUrl: "https://explorer.zksync.stratisplatform.com",
+    blockExplorerApi: "https://explorer-api.zksync.stratisplatform.com",
+    displaySettings: {
+      showPartnerLinks: false,
+    },
+    l1Network: l1Networks.stratis,
+  },
+  {
     id: 206206,
     key: "auroria",
     name: "zkSync Auroria Testnet",
@@ -67,7 +79,7 @@ const publicChains: ZkSyncNetwork[] = [
     blockExplorerUrl: "https://auroria.explorer.zksync.stratisplatform.com",
     blockExplorerApi: "https://auroria.explorer-api.zksync.stratisplatform.com",
     displaySettings: {
-      showPartnerLinks: true,
+      showPartnerLinks: false,
     },
     l1Network: l1Networks.auroria,
   },

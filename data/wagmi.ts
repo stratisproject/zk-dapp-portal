@@ -17,6 +17,29 @@ if (!portalRuntimeConfig.walletConnectProjectId) {
   throw new Error("WALLET_CONNECT_PROJECT_ID is not set. Please set it in .env file");
 }
 
+const zkSyncStratis = {
+  id: 106106,
+  name: "zkSync Stratis",
+  network: "zksync-stratis",
+  nativeCurrency: {
+    decimals: 18,
+    name: "Stratis",
+    symbol: "STRAX",
+  },
+  rpcUrls: {
+    default: {
+      http: ["https://zksync.rpc.stratisplatform.com"],
+      webSocket: ["wss://zksync.rpc.stratisplatform.com/ws"],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: "zkExplorer",
+      url: "https://explorer.zksync.stratisplatform.com",
+    },
+  },
+};
+
 const zkSyncAuroria = {
   id: 206206,
   name: "zkSync Auroria",
@@ -41,7 +64,7 @@ const zkSyncAuroria = {
 };
 
 const useExistingEraChain = (network: ZkSyncNetwork) => {
-  const existingNetworks = [zkSyncAuroria];
+  const existingNetworks = [zkSyncStratis, zkSyncAuroria];
   return existingNetworks.find((existingNetwork) => existingNetwork.id === network.id);
 };
 const formatZkSyncChain = (network: ZkSyncNetwork) => {
