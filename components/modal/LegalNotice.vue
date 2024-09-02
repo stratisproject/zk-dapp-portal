@@ -11,7 +11,7 @@
     <CommonCheckboxWithText ref="checkbox" v-model="warningChecked" class="mt-3">
       <!-- I agree to the <a href="/terms" target="_blank" class="checkbox-link">Terms of Service</a> and
       <a href="/privacy" target="_blank" class="checkbox-link">Privacy Policy</a> -->
-      I agree to the <a href="/privacy" class="checkbox-link">Privacy Policy</a>
+      I agree to the <a href="/terms" class="checkbox-link">Terms</a>
     </CommonCheckboxWithText>
     <CommonButton class="mt-8 w-full" variant="primary" :disabled="!warningChecked" @click="proceed()">
       Proceed
