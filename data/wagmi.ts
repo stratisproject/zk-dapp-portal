@@ -17,10 +17,10 @@ if (!portalRuntimeConfig.walletConnectProjectId) {
   throw new Error("WALLET_CONNECT_PROJECT_ID is not set. Please set it in .env file");
 }
 
-const zkSyncStratis = {
+const zkStratis = {
   id: 106106,
-  name: "zkSync Stratis",
-  network: "zksync-stratis",
+  name: "zkStratis",
+  network: "zkstratis",
   nativeCurrency: {
     decimals: 18,
     name: "Stratis",
@@ -34,20 +34,20 @@ const zkSyncStratis = {
   },
   blockExplorers: {
     default: {
-      name: "zkExplorer",
-      url: "https://explorer.zksync.stratisplatform.com",
+      name: "zkStratis Explorer",
+      url: "https://zkstratis.explorer.stratisplatform.com",
     },
   },
 };
 
-const zkSyncAuroria = {
+const zkAuroria = {
   id: 206206,
-  name: "zkSync Auroria",
-  network: "zksync-auroria",
+  name: "zkAuroria",
+  network: "zkauroria",
   nativeCurrency: {
     decimals: 18,
-    name: "Auroria Stratis",
-    symbol: "tSTRAX",
+    name: "Stratis",
+    symbol: "STRAX",
   },
   rpcUrls: {
     default: {
@@ -57,14 +57,14 @@ const zkSyncAuroria = {
   },
   blockExplorers: {
     default: {
-      name: "zkExplorer",
-      url: "https://auroria.explorer.zksync.stratisplatform.com",
+      name: "zkAuroria Explorer",
+      url: "https://zkauroria.explorer.stratisplatform.com",
     },
   },
 };
 
 const useExistingEraChain = (network: ZkSyncNetwork) => {
-  const existingNetworks = [zkSyncStratis, zkSyncAuroria];
+  const existingNetworks = [zkStratis, zkAuroria];
   return existingNetworks.find((existingNetwork) => existingNetwork.id === network.id);
 };
 const formatZkSyncChain = (network: ZkSyncNetwork) => {

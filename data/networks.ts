@@ -62,7 +62,7 @@ const publicChains: ZkSyncNetwork[] = [
   {
     id: 106106,
     key: "stratis",
-    name: "zkSync Stratis",
+    name: "zkStratis",
     rpcUrl: "https://zksync.rpc.stratisplatform.com",
     blockExplorerUrl: "https://zkstratis.explorer.stratisplatform.com",
     blockExplorerApi: "https://explorer-api.zksync.stratisplatform.com",
@@ -74,7 +74,7 @@ const publicChains: ZkSyncNetwork[] = [
   {
     id: 206206,
     key: "auroria",
-    name: "zkSync Auroria Testnet",
+    name: "zkAuroria",
     rpcUrl: "https://auroria.zksync.rpc.stratisplatform.com",
     blockExplorerUrl: "https://zkauroria.explorer.stratisplatform.com",
     blockExplorerApi: "https://auroria.explorer-api.zksync.stratisplatform.com",
