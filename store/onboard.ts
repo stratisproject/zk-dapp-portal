@@ -51,8 +51,8 @@ export const useOnboardStore = defineStore("onboard", () => {
   const web3modal = createWeb3Modal({
     wagmiConfig,
     projectId: portalRuntimeConfig.walletConnectProjectId!,
-    termsConditionsUrl: "https://zksync.io/terms",
-    privacyPolicyUrl: "https://zksync.io/privacy",
+    termsConditionsUrl: "https://verium.stratisplatform.com/terms",
+    privacyPolicyUrl: "https://verium.stratisplatform.com/privacy",
     themeMode: selectedColorMode.value,
   });
 
