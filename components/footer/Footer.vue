@@ -11,9 +11,9 @@
       </CommonButtonLabel> -->
       <NuxtLink
         class="footer-link"
-        :to="{ name: 'privacy' }"
+        :to="{ name: 'terms' }"
       >
-        Privacy
+        Terms
       </NuxtLink>
     </div>
   </footer>
