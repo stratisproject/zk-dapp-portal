@@ -1,8 +1,10 @@
 import { fallback, http } from "@wagmi/core";
-import { type Chain, zksync, zksyncSepoliaTestnet } from "@wagmi/core/chains";
+import { type Chain, zksyncSepoliaTestnet } from "@wagmi/core/chains";
 import { defaultWagmiConfig } from "@web3modal/wagmi";
+import { chainConfig, zksync } from "viem/zksync";
 
 import { chainList, type ZkSyncNetwork } from "@/data/networks";
+import { getPrividiumTransport } from "@/data/prividium";
 
 const portalRuntimeConfig = usePortalRuntimeConfig();
 
@@ -21,6 +23,7 @@ const useExistingEraChain = (network: ZkSyncNetwork) => {
   const existingNetworks = [zksync, zksyncSepoliaTestnet];
   return existingNetworks.find((existingNetwork) => existingNetwork.id === network.id);
 };
+
 const formatZkSyncChain = (network: ZkSyncNetwork) => {
   return {
     id: network.id,
@@ -39,6 +42,7 @@ const formatZkSyncChain = (network: ZkSyncNetwork) => {
           },
         }
       : undefined,
+    ...chainConfig,
   };
 };
 
@@ -50,7 +54,7 @@ const getAllChains = () => {
     }
   };
   for (const network of chainList) {
-    addUniqueChain(useExistingEraChain(network) ?? formatZkSyncChain(network));
+    addUniqueChain((!network.isPrividium && useExistingEraChain(network)) || formatZkSyncChain(network));
     if (network.l1Network) {
       addUniqueChain(network.l1Network);
     }
@@ -61,6 +65,10 @@ const getAllChains = () => {
 
 // Creates a fallback transport for a particular chain.
 const chainTransports = (chain: Chain) => {
+  // Check if this is a Prividium chain and use its authenticated transport
+  const prividiumTransport = getPrividiumTransport(chain.id);
+  if (prividiumTransport) return prividiumTransport;
+
   // We expect all the transports to support batch requests.
   const httpTransports = chain.rpcUrls.default.http.map((e) => http(e, { batch: true }));
   return fallback(httpTransports);
@@ -68,7 +76,7 @@ const chainTransports = (chain: Chain) => {
 
 const chains = getAllChains();
 export const wagmiConfig = defaultWagmiConfig({
-  chains: getAllChains() as any,
+  chains: getAllChains() as unknown as readonly [Chain, ...Chain[]],
   transports: Object.fromEntries(chains.map((chain) => [chain.id, chainTransports(chain)])),
   projectId: portalRuntimeConfig.walletConnectProjectId,
   metadata,

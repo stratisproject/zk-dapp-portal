@@ -16,7 +16,7 @@ export const useZkSyncTokensStore = defineStore("zkSyncTokens", () => {
     execute: requestTokens,
     reset: resetTokens,
   } = usePromise<Token[]>(async () => {
-    const provider = providerStore.requestProvider();
+    const provider = await providerStore.requestProvider();
     const ethL2TokenAddress = await provider.l2TokenAddress(utils.ETH_ADDRESS);
 
     let baseToken = null;
