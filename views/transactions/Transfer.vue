@@ -323,13 +323,13 @@ const toNetworkSelected = (networkKey?: string) => {
 };
 const fromNetworkModalOpened = ref(false);
 const fromNetworkSelected = (networkKey?: string) => {
-  if (destinations.value.stratis.key === networkKey) {
+  if (destinations.value.xertra.key === networkKey) {
     router.replace({ name: "bridge", query: route.query });
   }
 };
 
 const step = ref<"form" | "withdrawal-finalization-warning" | "confirm" | "submitted">("form");
-const destination = computed(() => (props.type === "transfer" ? destinations.value.era : destinations.value.stratis));
+const destination = computed(() => (props.type === "transfer" ? destinations.value.era : destinations.value.xertra));
 
 const availableTokens = computed(() => {
   if (!tokens.value) return [];

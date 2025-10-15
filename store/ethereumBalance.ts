@@ -26,8 +26,8 @@ export const useEthereumBalanceStore = defineStore("ethereumBalance", () => {
       if (!portalRuntimeConfig.ankrToken) throw new Error("Ankr token is not available");
 
       const ankrProvider = new AnkrProvider(`https://rpc.ankr.com/multichain/${portalRuntimeConfig.ankrToken}`);
-      const networkIdToAnkr = new Map<number, AnkrSupportedChains | "stratis" | "auroria">([
-        [l1Networks.stratis.id, "stratis"],
+      const networkIdToAnkr = new Map<number, AnkrSupportedChains | "xertra" | "auroria">([
+        [l1Networks.stratis.id, "xertra"],
         [l1Networks.auroria.id, "auroria"],
       ]);
       if (!networkIdToAnkr.has(eraNetwork.value.l1Network.id)) {

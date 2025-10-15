@@ -49,10 +49,10 @@ export const useDestinationsStore = defineStore("destinations", () => {
       label: "rhino.fi",
       iconUrl: "/img/rhino.svg",
     },
-    stratis: {
-      key: "stratis",
+    xertra: {
+      key: "xertra",
       label: l1Network.value ? l1Network.value.name : "",
-      iconUrl: "/img/stratis.svg",
+      iconUrl: "/img/xertra.svg",
     },
   }));
 

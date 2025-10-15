@@ -61,11 +61,11 @@ export const dockerizedNode: ZkSyncNetwork = {
 const publicChains: ZkSyncNetwork[] = [
   {
     id: 106106,
-    key: "stratis",
-    name: "zkStratis",
-    rpcUrl: "https://zksync.rpc.stratisplatform.com",
-    blockExplorerUrl: "https://zkstratis.explorer.stratisplatform.com",
-    blockExplorerApi: "https://explorer-api.zksync.stratisplatform.com",
+    key: "xertra",
+    name: "zkXertra",
+    rpcUrl: "https://zksync.rpc.xertra.com",
+    blockExplorerUrl: "https://zkxertra.explorer.xertra.com",
+    blockExplorerApi: "https://explorer-api.zksync.xertra.com",
     displaySettings: {
       showPartnerLinks: false,
     },
@@ -75,9 +75,9 @@ const publicChains: ZkSyncNetwork[] = [
     id: 206206,
     key: "auroria",
     name: "zkAuroria",
-    rpcUrl: "https://auroria.zksync.rpc.stratisplatform.com",
-    blockExplorerUrl: "https://zkauroria.explorer.stratisplatform.com",
-    blockExplorerApi: "https://auroria.explorer-api.zksync.stratisplatform.com",
+    rpcUrl: "https://auroria.zksync.rpc.xertra.com",
+    blockExplorerUrl: "https://zkauroria.explorer.xertra.com",
+    blockExplorerApi: "https://auroria.explorer-api.zksync.xertra.com",
     displaySettings: {
       showPartnerLinks: false,
     },

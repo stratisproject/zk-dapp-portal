@@ -81,7 +81,7 @@
 
       <template v-if="noBalances">
         <TypographyCategoryLabel>
-          To start using zkStratis ecosystem, deposit tokens in any convenient way
+          To start using zkXertra ecosystem, deposit tokens in any convenient way
         </TypographyCategoryLabel>
 
         <div class="flex flex-col gap-block-gap">
@@ -99,7 +99,7 @@
         </div>
       </template>
       <template v-else>
-        <TypographyCategoryLabel>Deposit more tokens to zkStratis</TypographyCategoryLabel>
+        <TypographyCategoryLabel>Deposit more tokens to zkXertra</TypographyCategoryLabel>
 
         <CommonCardWithLineButtons>
           <DestinationItem v-for="(item, index) in depositMethods" :key="index" v-bind="item.props">
@@ -145,7 +145,7 @@ const depositMethods = computed(() => {
   if (eraNetwork.value.l1Network && !noBalances.value) {
     methods.push({
       props: {
-        iconUrl: destinations.value.stratis.iconUrl,
+        iconUrl: destinations.value.xertra.iconUrl,
         label: `Bridge from ${eraNetwork.value.l1Network?.name}`,
         description: `Receive tokens from your ${eraNetwork.value.l1Network?.name} account`,
         as: "RouterLink",

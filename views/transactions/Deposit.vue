@@ -17,7 +17,7 @@
     <NetworkSelectModal
       v-model:opened="fromNetworkModalOpened"
       title="From"
-      :network-key="destinations.stratis.key"
+      :network-key="destinations.xertra.key"
       @update:network-key="fromNetworkSelected($event)"
     />
     <NetworkSelectModal
@@ -56,9 +56,9 @@
               @click="fromNetworkModalOpened = true"
             >
               <template #left-icon>
-                <img :src="destinations.stratis.iconUrl" class="h-full w-full" />
+                <img :src="destinations.xertra.iconUrl" class="h-full w-full" />
               </template>
-              <span>{{ destinations.stratis.label }}</span>
+              <span>{{ destinations.xertra.label }}</span>
             </CommonButtonDropdown>
           </template>
         </CommonInputTransactionAmount>
@@ -179,7 +179,7 @@
           >
             <p>
               Insufficient <span class="font-medium">{{ feeToken?.symbol }}</span> balance on
-              {{ destinations.stratis.label }} to cover the fee. We recommend having at least
+              {{ destinations.xertra.label }} to cover the fee. We recommend having at least
               <span class="font-medium"
                 >{{
                   feeToken?.price
@@ -200,7 +200,7 @@
           >
             <p>
               Insufficient <span class="font-medium">{{ feeToken?.symbol }}</span> balance on
-              <span class="font-medium">{{ destinations.stratis.label }}</span> to cover the fee
+              <span class="font-medium">{{ destinations.xertra.label }}</span> to cover the fee
             </p>
             <NuxtLink :to="{ name: 'receive-methods' }" class="alert-link">Receive funds</NuxtLink>
           </CommonAlert>
@@ -398,7 +398,7 @@ const { balance, balanceInProgress, balanceError } = storeToRefs(zkSyncEthereumB
 
 const toNetworkModalOpened = ref(false);
 const toNetworkSelected = (networkKey?: string) => {
-  if (destinations.value.stratis.key === networkKey) {
+  if (destinations.value.xertra.key === networkKey) {
     router.replace({ name: "bridge-withdraw", query: route.query });
   }
 };
@@ -576,7 +576,7 @@ const transaction = computed<
     },
     from: {
       address: account.value.address!,
-      destination: destinations.value.stratis,
+      destination: destinations.value.xertra,
     },
     to: {
       address: toAddress,

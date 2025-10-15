@@ -1,18 +1,18 @@
 export const portal = {
-  title: "zkStratis Portal | View balances, transfer and bridge tokens",
+  title: "zkXertra Portal | View balances, transfer and bridge tokens",
   description:
-    "zkStratis Portal allows you to view your balances, transfer tokens and bridge assets between zkStratis and Stratis",
+    "zkXertra Portal allows you to view your balances, transfer tokens and bridge assets between zkXertra and Xertra",
   previewImg: {
-    src: "https://verium.stratisplatform.com/preview.png",
-    alt: "zkStratis Portal",
+    src: "https://verium.xertra.com/preview.png",
+    alt: "zkXertra Portal",
   },
 };
 export const bridge = {
-  title: "zkStratis Bridge | Transfer funds between zkStratis and Stratis",
+  title: "zkXertra Bridge | Transfer funds between zkXertra and Xertra",
   description:
-    "With the zkStratis Bridge you can easily deposit tokens to zkStratis. Enjoy faster, cheaper and more efficient transactions with the future proof zkEVM.",
+    "With the zkXertra Bridge you can easily deposit tokens to zkXertra. Enjoy faster, cheaper and more efficient transactions with the future proof zkEVM.",
   previewImg: {
-    src: "https://verium.stratisplatform.com/preview.png",
-    alt: "zkStratis Bridge",
+    src: "https://verium.xertra.com/preview.png",
+    alt: "zkXertra Bridge",
   },
 };

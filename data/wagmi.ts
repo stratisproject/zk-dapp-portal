@@ -9,33 +9,33 @@ const portalRuntimeConfig = usePortalRuntimeConfig();
 const metadata = {
   name: "zkSync Portal",
   description: "zkSync Portal - view balances, transfer and bridge tokens",
-  url: "https://portal.zksync.stratisplatform.com",
-  icons: ["https://portal.zksync.stratisplatform.com/icon.png"],
+  url: "https://portal.zksync.xertra.com",
+  icons: ["https://portal.zksync.xertra.com/icon.png"],
 };
 
 if (!portalRuntimeConfig.walletConnectProjectId) {
   throw new Error("WALLET_CONNECT_PROJECT_ID is not set. Please set it in .env file");
 }
 
-const zkStratis = {
+const zkXertra = {
   id: 106106,
-  name: "zkStratis",
-  network: "zkstratis",
+  name: "zkXertra",
+  network: "zkxertra",
   nativeCurrency: {
     decimals: 18,
-    name: "Stratis",
+    name: "STRAX",
     symbol: "STRAX",
   },
   rpcUrls: {
     default: {
-      http: ["https://zksync.rpc.stratisplatform.com"],
-      webSocket: ["wss://zksync.rpc.stratisplatform.com/ws"],
+      http: ["https://zksync.rpc.xertra.com"],
+      webSocket: ["wss://zksync.rpc.xertra.com/ws"],
     },
   },
   blockExplorers: {
     default: {
-      name: "zkStratis Explorer",
-      url: "https://zkstratis.explorer.stratisplatform.com",
+      name: "zkXertra Explorer",
+      url: "https://zkxertra.explorer.xertra.com",
     },
   },
 };
@@ -46,25 +46,25 @@ const zkAuroria = {
   network: "zkauroria",
   nativeCurrency: {
     decimals: 18,
-    name: "Stratis",
+    name: "STRAX",
     symbol: "STRAX",
   },
   rpcUrls: {
     default: {
-      http: ["https://auroria.zksync.rpc.stratisplatform.com"],
-      webSocket: ["wss://auroria.zksync.rpc.stratisplatform.com/ws"],
+      http: ["https://auroria.zksync.rpc.xertra.com"],
+      webSocket: ["wss://auroria.zksync.rpc.xertra.com/ws"],
     },
   },
   blockExplorers: {
     default: {
       name: "zkAuroria Explorer",
-      url: "https://zkauroria.explorer.stratisplatform.com",
+      url: "https://zkauroria.explorer.xertra.com",
     },
   },
 };
 
 const useExistingEraChain = (network: ZkSyncNetwork) => {
-  const existingNetworks = [zkStratis, zkAuroria];
+  const existingNetworks = [zkXertra, zkAuroria];
   return existingNetworks.find((existingNetwork) => existingNetwork.id === network.id);
 };
 const formatZkSyncChain = (network: ZkSyncNetwork) => {
@@ -72,7 +72,7 @@ const formatZkSyncChain = (network: ZkSyncNetwork) => {
     id: network.id,
     name: network.name,
     network: network.key,
-    nativeCurrency: { name: "Stratis", symbol: "STRAX", decimals: 18 },
+    nativeCurrency: { name: "STRAX", symbol: "STRAX", decimals: 18 },
     rpcUrls: {
       default: { http: [network.rpcUrl] },
       public: { http: [network.rpcUrl] },

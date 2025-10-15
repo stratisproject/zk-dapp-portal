@@ -75,7 +75,7 @@ const filterDestinations = (networks: TransactionDestination[]) => {
 const destinationGroups = computed(() => [
   {
     title: "Chains",
-    destinations: [destinations.value.era, destinations.value.stratis],
+    destinations: [destinations.value.era, destinations.value.xertra],
   },
 ]);
 const displayedGroups = computed(() =>

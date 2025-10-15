@@ -5,7 +5,7 @@
     variant="primary"
   >
     <DestinationItem
-      :icon-url="destinations.stratis.iconUrl"
+      :icon-url="destinations.xertra.iconUrl"
       as="RouterLink"
       :to="{ name: 'bridge' }"
       variant="primary"
