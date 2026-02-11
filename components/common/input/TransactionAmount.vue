@@ -82,6 +82,7 @@
           class="h-max"
           :toggled="selectTokenModalOpened"
           variant="light"
+          :disabled="loading"
           @click="selectTokenModalOpened = true"
         >
           <template #left-icon>
@@ -98,10 +99,10 @@
 
 <script lang="ts" setup>
 import { LockClosedIcon } from "@heroicons/vue/24/outline";
-import { BigNumber } from "ethers";
+
+import { useSentryLogger } from "@/composables/useSentryLogger";
 
 import type { Token, TokenAmount } from "@/types";
-import type { BigNumberish } from "ethers";
 
 const props = defineProps({
   modelValue: {
@@ -129,7 +130,7 @@ const props = defineProps({
     type: String,
   },
   maxAmount: {
-    type: String as PropType<BigNumberish>,
+    type: String,
   },
   error: {
     type: String,
@@ -145,6 +146,8 @@ const emit = defineEmits<{
   (eventName: "update:modelValue", amount: string): void;
   (eventName: "update:tokenAddress", tokenAddress?: string): void;
 }>();
+
+const { captureException } = useSentryLogger();
 
 const selectedTokenAddress = computed({
   get: () => props.tokenAddress,
@@ -170,11 +173,17 @@ const inputted = computed({
 const totalComputeAmount = computed(() => {
   try {
     if (!inputted.value || !selectedToken.value) {
-      return BigNumber.from("0");
+      return 0n;
     }
     return decimalToBigNumber(inputted.value, selectedToken.value.decimals);
   } catch (error) {
-    return BigNumber.from("0");
+    captureException({
+      error: error as Error,
+      parentFunctionName: "totalComputeAmount",
+      parentFunctionParams: [],
+      filePath: "components/common/input/TransactionAmount.vue",
+    });
+    return 0n;
   }
 });
 const totalAmountPrice = computed(() => {
@@ -201,7 +210,7 @@ const isMaxAmountSet = computed(() => {
   if (!props.maxAmount) {
     return false;
   }
-  return totalComputeAmount.value.eq(props.maxAmount);
+  return totalComputeAmount.value === BigInt(props.maxAmount);
 });
 const setMaxAmount = () => {
   if (!maxDecimalAmount.value) return;
@@ -210,11 +219,11 @@ const setMaxAmount = () => {
 
 const amountError = computed(() => {
   if (!selectedToken.value) return;
-  if (tokenBalance.value && totalComputeAmount.value.gt(tokenBalance.value.amount)) {
+  if (tokenBalance.value && totalComputeAmount.value > BigInt(tokenBalance.value.amount)) {
     return "exceeds_balance";
   }
-  if (props.maxAmount && totalComputeAmount.value.gt(props.maxAmount)) {
-    if (BigNumber.from(props.maxAmount).isZero()) {
+  if (props.maxAmount && totalComputeAmount.value > BigInt(props.maxAmount)) {
+    if (BigInt(props.maxAmount) === BigInt(0)) {
       return "insufficient_balance";
     }
     return "exceeds_max_amount";

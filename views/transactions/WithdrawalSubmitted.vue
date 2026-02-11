@@ -17,7 +17,8 @@
         </template>
         <template v-else>
           Your funds will be available on <span class="font-medium">{{ transaction.to.destination.label }}</span> after
-          the <a class="underline underline-offset-2" :href="ZKSYNC_WITHDRAWAL_DELAY" target="_blank">24-hour delay</a>.
+          the
+          <a class="underline underline-offset-2" :href="ZKSYNC_WITHDRAWAL_DELAY" target="_blank">~5+ hour delay</a>.
           During this time, the transaction will be processed
           {{
             withdrawalManualFinalizationRequired
@@ -35,7 +36,12 @@
         >
           <p>You can claim your withdrawal now.</p>
         </CommonAlert>
-        <CommonAlert v-else-if="isCustomBridgeToken" variant="warning" :icon="ExclamationTriangleIcon" class="mb-4">
+        <CommonAlert
+          v-else-if="!props.transaction.token.l1Address && !isCustomBridgeToken"
+          variant="warning"
+          :icon="ExclamationTriangleIcon"
+          class="mb-4"
+        >
           <p>This withdrawal was made through a third-party bridge. Please use that bridge to claim your withdrawal.</p>
         </CommonAlert>
         <CommonAlert v-else variant="warning" :icon="ExclamationTriangleIcon" class="mb-4">
@@ -60,7 +66,7 @@
       :failed="transaction.info.failed"
       :animation-state="withdrawalFinalizationAvailable ? 'stopped-in-the-end' : undefined"
       :expected-complete-timestamp="
-        withdrawalFinalizationAvailable || isCustomBridgeToken ? undefined : transaction.info.expectedCompleteTimestamp
+        withdrawalFinalizationAvailable ? undefined : transaction.info.expectedCompleteTimestamp
       "
     >
       <template v-if="withdrawalFinalizationAvailable" #to-button>
@@ -156,6 +162,7 @@
 import { ExclamationTriangleIcon } from "@heroicons/vue/24/outline";
 
 import useWithdrawalFinalization from "@/composables/zksync/useWithdrawalFinalization";
+import { customBridgeTokens } from "@/data/customBridgeTokens";
 import { isCustomNode } from "@/data/networks";
 
 const props = defineProps({
@@ -175,16 +182,27 @@ const { eraNetwork, blockExplorerUrl } = storeToRefs(useZkSyncProviderStore());
 const { l1BlockExplorerUrl } = storeToRefs(useNetworkStore());
 const { connectorName, isCorrectNetworkSet } = storeToRefs(onboardStore);
 
-const isCustomBridgeToken = computed(() => !props.transaction.token.l1Address);
+const isCustomBridgeToken = computed(() => {
+  // Check if this is a custom bridge token by looking for l1BridgeAddress
+  // For existing withdrawals, we need to look it up from the custom bridge tokens config
+  if (props.transaction.token.l1BridgeAddress) {
+    return true;
+  }
+
+  // Fallback: lookup from custom bridge tokens configuration
+  const customBridgeToken = customBridgeTokens.find(
+    (token) =>
+      token.l2Address.toLowerCase() === props.transaction.token.address.toLowerCase() &&
+      token.chainId === eraNetwork.value.l1Network?.id
+  );
+
+  return !!customBridgeToken?.l1BridgeAddress;
+});
 const withdrawalManualFinalizationRequired = computed(() => {
   return !props.transaction.info.completed;
 });
 const withdrawalFinalizationAvailable = computed(() => {
-  return (
-    !isCustomBridgeToken.value &&
-    withdrawalManualFinalizationRequired.value &&
-    props.transaction.info.withdrawalFinalizationAvailable
-  );
+  return withdrawalManualFinalizationRequired.value && props.transaction.info.withdrawalFinalizationAvailable;
 });
 
 const {

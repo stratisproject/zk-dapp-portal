@@ -45,7 +45,7 @@
           :balances="availableBalances"
           :max-amount="maxAmount"
           :approve-required="!enoughAllowance && (!tokenCustomBridge || !tokenCustomBridge.bridgingDisabled)"
-          :loading="tokensRequestInProgress || balanceInProgress"
+          :loading="tokensRequestInProgress || balanceInProgress || feeLoading"
           class="mb-block-padding-1/2 sm:mb-block-gap"
         >
           <template #dropdown>
@@ -62,7 +62,9 @@
             </CommonButtonDropdown>
           </template>
         </CommonInputTransactionAmount>
-        <CommonHeightTransition :opened="!!tokenCustomBridge && !tokenCustomBridge.bridgingDisabled">
+        <CommonHeightTransition
+          :opened="!!tokenCustomBridge && !tokenCustomBridge.bridgingDisabled && !tokenCustomBridge.hideAlertMessage"
+        >
           <div class="mb-block-padding-1/2 sm:mb-block-gap">
             <CommonAlert variant="warning" size="sm">
               <p>
@@ -106,6 +108,12 @@
           class="mt-6"
           :custom-bridge-token="tokenCustomBridge"
         />
+        <TransactionNativeBridge
+          v-if="nativeTokenBridgingOnly"
+          :era-network="eraNetwork"
+          type="deposit"
+          class="mt-6"
+        ></TransactionNativeBridge>
       </template>
       <template v-else-if="step === 'wallet-warning'">
         <CommonAlert variant="warning" :icon="ExclamationTriangleIcon" class="mb-block-padding-1/2 sm:mb-block-gap">
@@ -153,7 +161,11 @@
       </template>
 
       <template
-        v-if="(!tokenCustomBridge || !tokenCustomBridge?.bridgingDisabled) && (step === 'form' || step === 'confirm')"
+        v-if="
+          !nativeTokenBridgingOnly &&
+          (!tokenCustomBridge || !tokenCustomBridge?.bridgingDisabled) &&
+          (step === 'form' || step === 'confirm')
+        "
       >
         <CommonErrorBlock v-if="feeError" class="mt-2" @try-again="estimate">
           Fee estimation error: {{ feeError.message }}
@@ -184,7 +196,7 @@
                 >{{
                   feeToken?.price
                     ? removeSmallAmountPretty(recommendedBalance, feeToken?.decimals, feeToken?.price)
-                    : parseTokenAmount(recommendedBalance, ETH_TOKEN.decimals)
+                    : parseTokenAmount(recommendedBalance, feeToken?.decimals || 18)
                 }}
                 {{ feeToken?.symbol }}</span
               >
@@ -213,25 +225,27 @@
         </CommonErrorBlock>
         <CommonHeightTransition
           v-if="step === 'form'"
-          :opened="(!enoughAllowance && !continueButtonDisabled) || !!setAllowanceReceipt"
+          :opened="(!enoughAllowance && !continueButtonDisabled) || !!setAllowanceReceipts?.length"
         >
           <CommonCardWithLineButtons class="mt-4">
             <DestinationItem
-              v-if="enoughAllowance && setAllowanceReceipt"
+              v-if="enoughAllowance && setAllowanceReceipts?.length"
               as="div"
               :description="`You can now proceed to deposit`"
             >
               <template #label>
                 {{ selectedToken?.symbol }} allowance approved
-                <a
-                  v-if="l1BlockExplorerUrl"
-                  :href="`${l1BlockExplorerUrl}/tx/${setAllowanceReceipt.transactionHash}`"
-                  target="_blank"
-                  class="inline-flex items-center gap-1 underline underline-offset-2"
-                >
-                  View on Explorer
-                  <ArrowTopRightOnSquareIcon class="h-6 w-6" aria-hidden="true" />
-                </a>
+                <template v-for="allowanceReceipt in setAllowanceReceipts" :key="allowanceReceipt.transactionHash">
+                  <a
+                    v-if="l1BlockExplorerUrl"
+                    :href="`${l1BlockExplorerUrl}/tx/${allowanceReceipt.transactionHash}`"
+                    target="_blank"
+                    class="inline-flex items-center gap-1 underline underline-offset-2"
+                  >
+                    View on Explorer
+                    <ArrowTopRightOnSquareIcon class="h-6 w-6" aria-hidden="true" />
+                  </a>
+                </template>
               </template>
               <template #image>
                 <div class="aspect-square h-full w-full rounded-full bg-success-400 p-3 text-black">
@@ -242,20 +256,25 @@
             <DestinationItem v-else as="div">
               <template #label>
                 Approve {{ selectedToken?.symbol }} allowance
-                <a
-                  v-if="l1BlockExplorerUrl && setAllowanceTransactionHash"
-                  :href="`${l1BlockExplorerUrl}/tx/${setAllowanceTransactionHash}`"
-                  target="_blank"
-                  class="inline-flex items-center gap-1 underline underline-offset-2"
+                <template
+                  v-for="allowanceTransactionHash in setAllowanceTransactionHashes"
+                  :key="allowanceTransactionHash"
                 >
-                  View on Explorer
-                  <ArrowTopRightOnSquareIcon class="h-6 w-6" aria-hidden="true" />
-                </a>
+                  <a
+                    v-if="l1BlockExplorerUrl && allowanceTransactionHash"
+                    :href="`${l1BlockExplorerUrl}/tx/${allowanceTransactionHash}`"
+                    target="_blank"
+                    class="inline-flex items-center gap-1 underline underline-offset-2"
+                  >
+                    View on Explorer
+                    <ArrowTopRightOnSquareIcon class="h-6 w-6" aria-hidden="true" />
+                  </a>
+                </template>
               </template>
               <template #underline>
                 Before depositing you need to give our bridge permission to spend specified amount of
                 {{ selectedToken?.symbol }}.
-                <span v-if="allowance && !allowance.isZero()"
+                <span v-if="allowance && allowance !== 0n"
                   >You can deposit up to
                   <CommonButtonLabel variant="light" @click="setAmountToCurrentAllowance()">
                     {{ parseTokenAmount(allowance!, selectedToken!.decimals) }}
@@ -278,7 +297,7 @@
         <EthereumTransactionFooter>
           <template #after-checks>
             <template v-if="step === 'form'">
-              <template v-if="!enoughAllowance && !continueButtonDisabled">
+              <template v-if="!enoughAllowance && !continueButtonDisabled && !nativeTokenBridgingOnly">
                 <CommonButton
                   type="submit"
                   :disabled="continueButtonDisabled || setAllowanceInProgress"
@@ -365,12 +384,13 @@ import {
   ExclamationTriangleIcon,
   LockClosedIcon,
 } from "@heroicons/vue/24/outline";
+import { computedAsync } from "@vueuse/core";
 import { useRouteQuery } from "@vueuse/router";
-import { BigNumber } from "ethers";
-import { isAddress } from "ethers/lib/utils";
+import { isAddress } from "ethers";
 
 import EthereumTransactionFooter from "@/components/transaction/EthereumTransactionFooter.vue";
 import useAllowance from "@/composables/transaction/useAllowance";
+import { useSentryLogger } from "@/composables/useSentryLogger";
 import useEcosystemBanner from "@/composables/zksync/deposit/useEcosystemBanner";
 import useFee from "@/composables/zksync/deposit/useFee";
 import useTransaction from "@/composables/zksync/deposit/useTransaction";
@@ -380,6 +400,7 @@ import DepositSubmitted from "@/views/transactions/DepositSubmitted.vue";
 
 import type { Token, TokenAmount } from "@/types";
 import type { BigNumberish } from "ethers";
+import type { Address } from "viem";
 
 const route = useRoute();
 const router = useRouter();
@@ -393,8 +414,10 @@ const { account, isConnected, walletNotSupported, walletWarningDisabled } = stor
 const { eraNetwork } = storeToRefs(providerStore);
 const { destinations } = storeToRefs(useDestinationsStore());
 const { l1BlockExplorerUrl } = storeToRefs(useNetworkStore());
-const { l1Tokens, tokensRequestInProgress, tokensRequestError } = storeToRefs(tokensStore);
+const { l1Tokens, baseToken, tokensRequestInProgress, tokensRequestError } = storeToRefs(tokensStore);
 const { balance, balanceInProgress, balanceError } = storeToRefs(zkSyncEthereumBalance);
+
+const { captureException } = useSentryLogger();
 
 const toNetworkModalOpened = ref(false);
 const toNetworkSelected = (networkKey?: string) => {
@@ -414,7 +437,7 @@ const destination = computed(() => destinations.value.era);
 
 const availableTokens = computed<Token[]>(() => {
   if (balance.value) return balance.value;
-  return Object.values(l1Tokens.value ?? []);
+  return getTokensWithCustomBridgeTokens(Object.values(l1Tokens.value ?? []), AddressChainType.L1);
 });
 const availableBalances = computed<TokenAmount[]>(() => {
   return balance.value ?? [];
@@ -426,16 +449,28 @@ const routeTokenAddress = computed(() => {
   return checksumAddress(route.query.token);
 });
 const defaultToken = computed(
-  () => availableTokens.value.find((e) => e.address === ETH_TOKEN.l1Address) ?? availableTokens.value[0] ?? undefined
+  () =>
+    availableTokens.value.find((e) => e.address === baseToken.value?.l1Address) ?? availableTokens.value[0] ?? undefined
 );
 const selectedTokenAddress = ref<string | undefined>(routeTokenAddress.value ?? defaultToken.value?.address);
 const selectedToken = computed<Token | undefined>(() => {
   if (!selectedTokenAddress.value) {
     return defaultToken.value;
   }
+
+  // Handle special case for L1 tokens with multiple L2 counterparts (native and bridged)
+  // In the case of those tokens, we create the identifier by combining the L1 address and L2 address
+  const getTokenId = (token: Token): string => {
+    const hasMultipleL2Counterparts =
+      selectedTokenAddress.value?.includes(token.address) &&
+      selectedTokenAddress.value?.includes(String(token.l2Address));
+
+    return hasMultipleL2Counterparts ? `${token.address}-${token.l2Address}` : token.address;
+  };
+
   return (
-    availableTokens.value.find((e) => e.address === selectedTokenAddress.value) ||
-    availableBalances.value.find((e) => e.address === selectedTokenAddress.value) ||
+    availableTokens.value.find((e) => getTokenId(e) === selectedTokenAddress.value) ||
+    availableBalances.value.find((e) => getTokenId(e) === selectedTokenAddress.value) ||
     defaultToken.value
   );
 });
@@ -464,24 +499,29 @@ const {
   error: allowanceRequestError,
   requestAllowance,
 
-  setAllowanceTransactionHash,
-  setAllowanceReceipt,
+  setAllowanceTransactionHashes,
+  setAllowanceReceipts,
   setAllowanceStatus,
   setAllowanceInProgress,
   setAllowanceError,
   setAllowance,
   resetSetAllowance,
+  getApprovalAmounts,
 } = useAllowance(
   computed(() => account.value.address),
   computed(() => selectedToken.value?.address),
-  async () => (await providerStore.requestProvider().getDefaultBridgeAddresses()).sharedL1
+  async () => (await providerStore.requestProvider().then((provider) => provider.getDefaultBridgeAddresses())).sharedL1,
+  eraWalletStore.getL1Signer
 );
-const enoughAllowance = computed(() => {
-  if (!allowance.value || !selectedToken.value) {
+const enoughAllowance = computedAsync(async () => {
+  if (allowance?.value === undefined || !selectedToken.value) {
     return true;
   }
-  return !allowance.value.isZero() && allowance.value.gte(totalComputeAmount.value);
-});
+
+  const approvalAmounts = await getApprovalAmounts(totalComputeAmount.value, feeValues.value!);
+  const approvalAllowance = approvalAmounts.length ? approvalAmounts[0]?.allowance : 0;
+  return allowance.value !== 0n && allowance?.value >= BigInt(approvalAllowance);
+}, false);
 const setAmountToCurrentAllowance = () => {
   if (!allowance.value || !selectedToken.value) {
     return;
@@ -489,7 +529,7 @@ const setAmountToCurrentAllowance = () => {
   amount.value = parseTokenAmount(allowance.value, selectedToken.value.decimals);
 };
 const setTokenAllowance = async () => {
-  await setAllowance(totalComputeAmount.value);
+  await setAllowance(totalComputeAmount.value, feeValues.value!);
   await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait for balances to be updated on API side
   await fetchBalances(true);
 };
@@ -532,27 +572,33 @@ const maxAmount = computed(() => {
     return undefined;
   }
   if (feeToken.value?.address === selectedToken.value.address) {
-    if (BigNumber.from(tokenBalance.value).isZero()) {
+    if (BigInt(tokenBalance.value) === 0n) {
       return "0";
     }
     if (!fee.value) {
       return undefined;
     }
-    if (BigNumber.from(fee.value).gt(tokenBalance.value)) {
+    if (BigInt(fee.value) > BigInt(tokenBalance.value)) {
       return "0";
     }
-    return BigNumber.from(tokenBalance.value).sub(fee.value).toString();
+    return String(BigInt(tokenBalance.value) - BigInt(fee.value));
   }
   return tokenBalance.value.toString();
 });
 const totalComputeAmount = computed(() => {
   try {
     if (!amount.value || !selectedToken.value) {
-      return BigNumber.from("0");
+      return 0n;
     }
     return decimalToBigNumber(amount.value, selectedToken.value.decimals);
   } catch (error) {
-    return BigNumber.from("0");
+    captureException({
+      error: error as Error,
+      parentFunctionName: "totalComputeAmount",
+      parentFunctionParams: [],
+      filePath: "views/transactions/Deposit.vue",
+    });
+    return 0n;
   }
 });
 const enoughBalanceForTransaction = computed(() => !amountError.value);
@@ -618,12 +664,24 @@ watch(
   { immediate: true }
 );
 
+const nativeTokenBridgingOnly = computed(() => {
+  if (
+    eraNetwork.value.nativeTokenBridgingOnly &&
+    eraNetwork.value.nativeCurrency &&
+    selectedToken.value &&
+    selectedToken.value.address !== baseToken.value?.l1Address
+  ) {
+    return true;
+  }
+  return false;
+});
+
 const continueButtonDisabled = computed(() => {
   if (
     !transaction.value ||
     !enoughBalanceToCoverFee.value ||
     !(!amountError.value || amountError.value === "exceeds_max_amount") ||
-    BigNumber.from(transaction.value.token.amount).isZero()
+    BigInt(transaction.value.token.amount) === 0n
   )
     return true;
   if ((allowanceRequestInProgress.value && !allowance.value) || allowanceRequestError.value) return true;
@@ -677,9 +735,10 @@ const makeTransaction = async () => {
 
   const tx = await commitTransaction(
     {
-      to: transaction.value!.to.address,
-      tokenAddress: transaction.value!.token.address,
+      to: transaction.value!.to.address as Address,
+      tokenAddress: transaction.value!.token.address as Address,
       amount: transaction.value!.token.amount,
+      bridgeAddress: transaction.value!.token.l1BridgeAddress as Address | undefined,
     },
     feeValues.value!
   );
@@ -692,7 +751,7 @@ const makeTransaction = async () => {
 
   if (tx) {
     zkSyncEthereumBalance.deductBalance(feeToken.value!.address!, fee.value!);
-    zkSyncEthereumBalance.deductBalance(transaction.value!.token.address!, transaction.value!.token.amount);
+    zkSyncEthereumBalance.deductBalance(transaction.value!.token.address!, String(transaction.value!.token.amount));
     transactionInfo.value = {
       type: "deposit",
       transactionHash: tx.hash,

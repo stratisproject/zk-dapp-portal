@@ -1,7 +1,9 @@
 import { getBalance } from "@wagmi/core";
+import { utils } from "zksync-ethers";
 
 import { l1Networks } from "@/data/networks";
 import { wagmiConfig } from "@/data/wagmi";
+import { getBalancesWithCustomBridgeTokens, AddressChainType } from "@/utils/helpers";
 
 import type { Hash, TokenAmount } from "@/types";
 
@@ -40,8 +42,8 @@ export const useZkSyncEthereumBalanceStore = defineStore("zkSyncEthereumBalances
           amount: "0",
         })),
     ].sort((a, b) => {
-      if (a.address === ETH_TOKEN.l1Address) return -1; // Always bring ETH to the beginning
-      if (b.address === ETH_TOKEN.l1Address) return 1; // Keep ETH at the beginning if comparing with any other token
+      if (a.address.toUpperCase() === utils.ETH_ADDRESS.toUpperCase()) return -1; // Always bring ETH to the beginning
+      if (b.address.toUpperCase() === utils.ETH_ADDRESS.toUpperCase()) return 1; // Keep ETH at the beginning if comparing with any other token
       return 0; // Keep other tokens' order unchanged
     });
   };
@@ -55,7 +57,7 @@ export const useZkSyncEthereumBalanceStore = defineStore("zkSyncEthereumBalances
         const amount = await getBalance(wagmiConfig, {
           address: account.value.address!,
           chainId: l1Network.value!.id,
-          token: token.address === ETH_TOKEN.l1Address ? undefined : (token.address! as Hash),
+          token: token.address.toUpperCase() === utils.ETH_ADDRESS.toUpperCase() ? undefined : (token.address! as Hash),
         });
         return {
           ...token,
@@ -78,9 +80,11 @@ export const useZkSyncEthereumBalanceStore = defineStore("zkSyncEthereumBalances
         ([l1Networks.stratis.id, l1Networks.auroria.id] as number[]).includes(l1Network.value?.id) &&
         portalRuntimeConfig.ankrToken
       ) {
-        return await getBalancesFromApi();
+        const apiBalances = await getBalancesFromApi();
+        return getBalancesWithCustomBridgeTokens(apiBalances, AddressChainType.L1);
       } else {
-        return await getBalancesFromRPC();
+        const rpcBalances = await getBalancesFromRPC();
+        return getBalancesWithCustomBridgeTokens(rpcBalances, AddressChainType.L1);
       }
     },
     { cache: 30000 }

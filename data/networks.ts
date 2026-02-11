@@ -1,13 +1,16 @@
 import { stratis, auroria } from "@wagmi/core/chains";
 
 import Hyperchains from "@/hyperchains/config.json";
-import { PUBLIC_L1_CHAINS, type Config } from "@/scripts/hyperchains/common";
+import { type Config } from "@/scripts/hyperchains/common";
 
 import type { Token } from "@/types";
 import type { Chain } from "@wagmi/core/chains";
 
 const portalRuntimeConfig = usePortalRuntimeConfig();
 
+// We don't use RPC tokens here, since the expectation is that public quota is enough to cover all the requests.
+// We provide several RPC URLs to deal with the case when one of them is down.
+// The expectation is that "more reliable" RPCs are listed first.
 export const l1Networks = {
   stratis,
   auroria,
@@ -25,12 +28,17 @@ export type ZkSyncNetwork = {
   blockExplorerUrl?: string;
   blockExplorerApi?: string;
   displaySettings?: {
+    onramp?: boolean;
     showPartnerLinks?: boolean;
+    isTestnet?: boolean;
   };
+  nativeCurrency?: { name: string; symbol: string; decimals: number };
+  nativeTokenBridgingOnly?: boolean;
   getTokens?: () => Token[] | Promise<Token[]>; // If blockExplorerApi is specified, tokens will be fetched from there. Otherwise, this function will be used.
+  isPrividium?: boolean;
 };
 
-// See the official documentation on running a local zkSync node: https://era.zksync.io/docs/tools/testing/
+// See the official documentation on running a local ZKsync node: https://era.zksync.io/docs/tools/testing/
 // Also see the guide in the README.md file in the root of the repository.
 
 // In-memory node default config. Docs: https://era.zksync.io/docs/tools/testing/era-test-node.html
@@ -86,14 +94,14 @@ const publicChains: ZkSyncNetwork[] = [
 ];
 
 const getHyperchains = (): ZkSyncNetwork[] => {
-  const hyperchains = Hyperchains as Config;
+  const hyperchains = portalRuntimeConfig.hyperchainsConfig || (Hyperchains as Config);
   return hyperchains.map((e) => {
     const network: ZkSyncNetwork = {
       ...e.network,
       getTokens: () => e.tokens,
     };
     if (e.network.publicL1NetworkId) {
-      network.l1Network = PUBLIC_L1_CHAINS.find((chain) => chain.id === e.network.publicL1NetworkId);
+      network.l1Network = Object.entries(l1Networks).find(([, chain]) => chain.id === e.network.publicL1NetworkId)?.[1];
       if (!network.l1Network) {
         throw new Error(
           `L1 network with ID ${e.network.publicL1NetworkId} from ${network.name} config wasn't found in the list of public L1 networks.`

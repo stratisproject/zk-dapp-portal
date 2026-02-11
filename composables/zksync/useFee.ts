@@ -1,25 +1,35 @@
-import { BigNumber } from "ethers";
+import { estimateGas } from "@wagmi/core";
+import { AbiCoder } from "ethers";
+import { encodeFunctionData } from "viem";
+import { EIP712_TX_TYPE } from "zksync-ethers/build/utils";
+
+import { wagmiConfig } from "@/data/wagmi";
 
 import type { Token, TokenAmount } from "@/types";
-import type { BigNumberish } from "ethers";
+import type { BigNumberish, ethers } from "ethers";
 import type { Provider } from "zksync-ethers";
+import type { Address, PaymasterParams } from "zksync-ethers/build/types";
 
 export type FeeEstimationParams = {
   type: "transfer" | "withdrawal";
   from: string;
   to: string;
   tokenAddress: string;
+  isNativeToken: boolean | null;
+  assetId?: string | null;
+  amount: string;
 };
 
 export default (
-  getProvider: () => Provider,
+  userAddress: ComputedRef<Address | undefined>,
+  getProvider: () => Promise<Provider>,
   tokens: Ref<{ [tokenSymbol: string]: Token } | undefined>,
   balances: Ref<TokenAmount[]>
 ) => {
   let params: FeeEstimationParams | undefined;
 
-  const gasLimit = ref<BigNumberish | undefined>();
-  const gasPrice = ref<BigNumberish | undefined>();
+  const gasLimit = ref<bigint | undefined>();
+  const gasPrice = ref<bigint | undefined>();
 
   const totalFee = computed(() => {
     if (!gasLimit.value || !gasPrice.value) return undefined;
@@ -27,7 +37,7 @@ export default (
   });
 
   const feeToken = computed(() => {
-    return tokens.value?.[ETH_TOKEN.address];
+    return tokens.value?.[L2_BASE_TOKEN_ADDRESS];
   });
   const enoughBalanceToCoverFee = computed(() => {
     if (!feeToken.value || inProgress.value) {
@@ -35,11 +45,52 @@ export default (
     }
     const feeTokenBalance = balances.value.find((e) => e.address === feeToken.value!.address);
     if (!feeTokenBalance) return true;
-    if (totalFee.value && BigNumber.from(totalFee.value).gt(feeTokenBalance.amount)) {
+    if (totalFee.value && BigInt(totalFee.value) > BigInt(feeTokenBalance.amount)) {
       return false;
     }
     return true;
   });
+
+  // We need to calculate gas limit with custom function since the new version of the SDK fails
+  const getCustomGasLimit = async (transaction: {
+    token: Address;
+    amount: BigNumberish;
+    from?: Address;
+    to?: Address;
+    bridgeAddress?: Address;
+    paymasterParams?: PaymasterParams;
+    overrides?: ethers.Overrides;
+  }): Promise<bigint> => {
+    const { ...tx } = transaction;
+    if ((tx.to === null || tx.to === undefined) && (tx.from === null || tx.from === undefined)) {
+      throw new Error("Withdrawal target address is undefined!");
+    }
+    tx.to ??= tx.from;
+    tx.overrides ??= {};
+    tx.overrides.from ??= tx.from;
+    tx.overrides.type ??= EIP712_TX_TYPE;
+
+    const provider = await getProvider();
+    const bridge = await provider.connectL2Bridge(tx.bridgeAddress!);
+    let populatedTx = await bridge.withdraw.populateTransaction(tx.to!, tx.token, tx.amount, tx.overrides);
+    if (tx.paymasterParams) {
+      populatedTx = {
+        ...populatedTx,
+        customData: {
+          paymasterParams: tx.paymasterParams,
+        },
+      };
+    }
+
+    const gasLimit = await provider.estimateGas(populatedTx);
+
+    return gasLimit;
+  };
+
+  const resetFee = () => {
+    gasLimit.value = undefined;
+    gasPrice.value = undefined;
+  };
 
   const {
     inProgress,
@@ -50,19 +101,79 @@ export default (
     async () => {
       if (!params) throw new Error("Params are not available");
 
-      const provider = getProvider();
-      const tokenBalance = balances.value.find((e) => e.address === params!.tokenAddress)?.amount || "1";
+      if (!userAddress.value) {
+        resetFee();
+        return;
+      }
+
+      const provider = await getProvider();
+      const token = balances.value.find((e) => e.address === params!.tokenAddress);
+      if (!token || token.amount === "0") {
+        resetFee();
+        return;
+      }
+
+      const tokenBalance = await provider.getBalance(userAddress.value, "latest", token.address); // Makes sure we have the latest balance amount
+      if (!tokenBalance) {
+        resetFee();
+        return;
+      }
+
+      if (params.isNativeToken && +params!.amount <= 0) {
+        resetFee();
+        return;
+      }
+
       const [price, limit] = await Promise.all([
         retry(() => provider.getGasPrice()),
         retry(() => {
-          return provider[params!.type === "transfer" ? "estimateGasTransfer" : "estimateGasWithdraw"]({
-            from: params!.from,
-            to: params!.to,
-            token: params!.tokenAddress === ETH_TOKEN.address ? ETH_TOKEN.l1Address! : params!.tokenAddress,
-            amount: tokenBalance,
-          });
+          const isCustomBridgeToken = !!token?.l2BridgeAddress;
+          if (isCustomBridgeToken) {
+            return getCustomGasLimit({
+              from: params!.from,
+              to: params!.to,
+              token: params!.tokenAddress,
+              amount: tokenBalance,
+              bridgeAddress: token?.l2BridgeAddress,
+            });
+          } else if (params!.isNativeToken && params!.assetId) {
+            const assetData = AbiCoder.defaultAbiCoder().encode(
+              ["uint256", "address", "address"],
+              [params!.amount, params!.to, params!.tokenAddress]
+            );
+
+            // Define the specific withdraw function as there are two
+            // defined on the Asset Router Contract
+            const withdrawFunction = {
+              inputs: [
+                { internalType: "bytes32", name: "_assetId", type: "bytes32" },
+                { internalType: "bytes", name: "_assetData", type: "bytes" },
+              ],
+              name: "withdraw",
+              outputs: [{ internalType: "bytes32", name: "", type: "bytes32" }],
+              stateMutability: "nonpayable",
+              type: "function",
+            };
+
+            return estimateGas(wagmiConfig, {
+              to: L2_ASSET_ROUTER_ADDRESS,
+              data: encodeFunctionData({
+                abi: [withdrawFunction],
+                functionName: "withdraw",
+                args: [params!.assetId, assetData],
+              }),
+            });
+          } else {
+            return provider[params!.type === "transfer" ? "estimateGasTransfer" : "estimateGasWithdraw"]({
+              from: params!.from,
+              to: params!.to,
+              token: params!.tokenAddress,
+              amount: tokenBalance,
+            });
+          }
         }),
       ]);
+
       gasPrice.value = price;
       gasLimit.value = limit;
     },
@@ -83,10 +194,7 @@ export default (
       params = estimationParams;
       await cacheEstimateFee(params);
     },
-    resetFee: () => {
-      gasLimit.value = undefined;
-      gasPrice.value = undefined;
-    },
+    resetFee,
 
     feeToken,
     enoughBalanceToCoverFee,

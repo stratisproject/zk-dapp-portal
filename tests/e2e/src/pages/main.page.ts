@@ -152,6 +152,13 @@ export class MainPage extends BasePage {
       await this.world.page?.goto(config.BASE_URL + route + config.DAPP_NETWORK);
       return route;
     } catch (e) {
+      sentryCaptureException({
+        error: e as Error,
+        parentFunctionName: "selectTransaction",
+        parentFunctionParams: [transactionType],
+        accountAddress: "",
+        filePath: "tests/e2e/src/pages/main.page.ts",
+      });
       console.error(e);
     }
   }
@@ -266,10 +273,10 @@ export class MainPage extends BasePage {
     await this.click(this.networkSwitcher);
 
     if (
-      networkName === "zkSync Era Mainnet" ||
-      networkName === "zkSync Era Testnet" ||
-      networkName === "zkSync Lite Mainnet" ||
-      networkName === "zkSync Lite Goerli"
+      networkName === "ZKsync Era Mainnet" ||
+      networkName === "ZKsync Era Testnet" ||
+      networkName === "ZKsync Lite Mainnet" ||
+      networkName === "ZKsync Lite Goerli"
     ) {
       result = `//*[text()='${networkName}']`;
     } else {
